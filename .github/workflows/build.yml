@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4.0.0
@@ -32,7 +32,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4.0.0
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4.0.0
@@ -112,4 +112,4 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         mv io.github.btj.termios.jar io.github.btj.termios-$GITHUB_REF_NAME.jar
-        gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber
+        gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber --repo btj/termios
