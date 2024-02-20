@@ -2,8 +2,14 @@ name: Build
 
 on:
   push:
+    branches-ignore:
+    - gh-pages
   pull_request:
+    branches-ignore:
+    - gh-pages
   release:
+    branches-ignore:
+    - gh-pages
 
 jobs:
   build-windows:
@@ -122,3 +128,19 @@ jobs:
         gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber --repo btj/termios
         pushd docs && zip -r ../io.github.btj.termios-$GITHUB_REF_NAME-docs.zip . && popd
         gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME-docs.zip --clobber --repo btj/termios
+
+    - name: Push docs to gh-pages branch
+      if: github.repository == 'btj/termios' && github.event_name == 'release'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git clone -b gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY gh-pages
+        cd gh-pages/docs
+        cp -R ../../docs $GITHUB_REF_NAME
+        echo '<a href="'$GITHUB_REF_NAME'">'$GITHUB_REF_NAME'</a>' >> index.html
+        git config --global user.name "$GITHUB_REPOSITORY GitHub Actions runner"
+        git config --global user.email "no@email"
+        git add .
+        git commit -m "Add release $GITHUB_REF_NAME docs (built from $GITHUB_SHA)"
+        gh auth setup-git
+        git push origin gh-pages
