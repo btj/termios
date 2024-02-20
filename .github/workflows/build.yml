@@ -8,6 +8,8 @@ on:
     branches-ignore:
     - gh-pages
   release:
+    types:
+    - published
     branches-ignore:
     - gh-pages
 
@@ -137,7 +139,7 @@ jobs:
         git clone -b gh-pages $GITHUB_SERVER_URL/$GITHUB_REPOSITORY gh-pages
         cd gh-pages/docs
         cp -R ../../docs $GITHUB_REF_NAME
-        echo '<a href="'$GITHUB_REF_NAME'">'$GITHUB_REF_NAME'</a>' >> index.html
+        echo '<a href="'$GITHUB_REF_NAME'">'$GITHUB_REF_NAME'</a><br>' >> index.html
         git config --global user.name "$GITHUB_REPOSITORY GitHub Actions runner"
         git config --global user.email "no@email"
         git add .
