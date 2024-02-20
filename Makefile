@@ -4,7 +4,7 @@ ifndef JAVA_HOME
   $(error Please set JAVA_HOME to the path to your JDK)
 endif
 
-ifdef WINDIR
+ifeq ($(OS), Windows_NT)
   CFLAGS=
   JNI_INCLUDE_DIR=win32
   LIBNAME=io_github_btj_termios.dll
