@@ -5,7 +5,21 @@ public class Terminal {
     private static java.io.FileInputStream stdin;
     
     static {
-        System.loadLibrary("io_github_btj_termios");
+        try {
+            String libName = System.mapLibraryName("io_github_btj_termios");
+            byte[] libBytes = Terminal.class.getClassLoader().getResourceAsStream(libName).readAllBytes();
+            byte[] libMD5Bytes = java.security.MessageDigest.getInstance("MD5").digest(libBytes);
+            String libMD5 = new java.math.BigInteger(1, libMD5Bytes).toString(16);
+            String libPath = System.getProperty("java.io.tmpdir") + "/" + System.mapLibraryName("io_github_btj_termios_" + libMD5);
+            java.io.File libFile = new java.io.File(libPath);
+            if (!libFile.exists())
+                java.nio.file.Files.write(libFile.toPath(), libBytes);
+            //System.out.println("The library is at " + libPath);
+            System.load(libPath);
+        } catch (java.io.IOException|java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
         stdin = new java.io.FileInputStream(java.io.FileDescriptor.in);
     }
 
