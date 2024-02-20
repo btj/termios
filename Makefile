@@ -57,3 +57,8 @@ test_raw_input: _build/test/classes/TerminalRawInputTest.class
 
 test: _build/test/classes/TerminalTest.class
 	java -cp "_build/main/classes${PATHSEP}_build/test/classes" TerminalTest
+
+javadoc: _build/docs/index.html
+
+_build/docs/index.html: src/main/java/io/github/btj/termios/Terminal.java
+	javadoc -sourcepath src/main/java -d _build/docs -public io.github.btj.termios

@@ -105,4 +105,6 @@ public class Terminal {
         System.out.flush();
     }
 
+    private Terminal() {}
+
 }
