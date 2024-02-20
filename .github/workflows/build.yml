@@ -120,5 +120,5 @@ jobs:
       run: |
         mv io.github.btj.termios.jar io.github.btj.termios-$GITHUB_REF_NAME.jar
         gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber --repo btj/termios
-        pushd _build/docs && zip -r ../../io.github.btj.termios-$GITHUB_REF_NAME-docs.zip . && popd
+        pushd docs && zip -r ../io.github.btj.termios-$GITHUB_REF_NAME-docs.zip . && popd
         gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME-docs.zip --clobber --repo btj/termios
