@@ -104,3 +104,11 @@ jobs:
         name: jar-multiplatform
         path: io.github.btj.termios.jar
         if-no-files-found: error
+
+    - name: Upload multiplatform jar as release asset
+      if: github.repository == 'btj/termios' && github.event_name == 'release'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        mv io.github.btj.termios.jar io.github.btj.termios-$GITHUB_REF_NAME.jar
+        gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber
