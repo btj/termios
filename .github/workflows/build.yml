@@ -1,0 +1,106 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4.0.0
+      with:
+        java-version: 21
+        distribution: temurin
+
+    - name: Build
+      run: make
+
+    - name: Upload jar
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: jar-windows
+        path: _build/main/io.github.btj.termios.jar
+        if-no-files-found: error
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4.0.0
+      with:
+        java-version: 21
+        distribution: temurin
+
+    - name: Build
+      run: make
+
+    - name: Upload jar
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: jar-macos
+        path: _build/main/io.github.btj.termios.jar
+        if-no-files-found: error
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4.0.0
+      with:
+        java-version: 21
+        distribution: temurin
+
+    - name: Build
+      run: make
+
+    - name: Upload jar
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: jar-ubuntu
+        path: _build/main/io.github.btj.termios.jar
+        if-no-files-found: error
+
+  build-multiplatform-jar:
+    runs-on: ubuntu-latest
+    needs:
+    - build-windows
+    - build-macos
+    - build-ubuntu
+
+    steps:
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4.0.0
+      with:
+        java-version: 21
+        distribution: temurin
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4.1.2
+
+    - name: Bundle jars
+      run: |
+        mkdir classes
+        cd classes
+        jar xf ../jar-ubuntu/io.github.btj.termios.jar
+        jar xf ../jar-macos/io.github.btj.termios.jar
+        jar xf ../jar-windows/io.github.btj.termios.jar
+        cd ..
+        jar cf io.github.btj.termios.jar -C classes .
+
+    - name: Upload jar
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: jar-multiplatform
+        path: io.github.btj.termios.jar
+        if-no-files-found: error
