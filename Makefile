@@ -12,16 +12,16 @@ ifdef WINDIR
   LINKFLAGS=-Wl,--add-stdcall-alias
   PATHSEP=;
 else
-  ifdef MACHTYPE
+  ifeq ($(shell uname -s), Darwin)
     JNI_INCLUDE_DIR=darwin
-	LIBNAME=libio_github_btj_termios.dylib
-	SHARED_FLAG=-dynamiclib
-	LINKFLAGS=-lc
+    LIBNAME=libio_github_btj_termios.dylib
+    SHARED_FLAG=-dynamiclib
+    LINKFLAGS=-lc
   else
     JNI_INCLUDE_DIR=linux
-	LIBNAME=libio_github_btj_termios.so
-	SHARED_FLAG=-shared -fPIC
-	LINKFLAGS=-lc
+    LIBNAME=libio_github_btj_termios.so
+    SHARED_FLAG=-shared -fPIC
+    LINKFLAGS=-lc
   endif
   CFLAGS=-fPIC
   PATHSEP=:
