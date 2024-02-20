@@ -63,13 +63,20 @@ jobs:
         distribution: temurin
 
     - name: Build
-      run: make
+      run: make && make javadoc
 
     - name: Upload jar
       uses: actions/upload-artifact@v4.3.1
       with:
         name: jar-ubuntu
         path: _build/main/io.github.btj.termios.jar
+        if-no-files-found: error
+        
+    - name: Upload docs
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: docs
+        path: _build/docs
         if-no-files-found: error
 
   build-multiplatform-jar:
@@ -106,10 +113,12 @@ jobs:
         path: io.github.btj.termios.jar
         if-no-files-found: error
 
-    - name: Upload multiplatform jar as release asset
+    - name: Upload multiplatform jar and docs as release asset
       if: github.repository == 'btj/termios' && github.event_name == 'release'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         mv io.github.btj.termios.jar io.github.btj.termios-$GITHUB_REF_NAME.jar
         gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME.jar --clobber --repo btj/termios
+        pushd _build/docs && zip -r ../../io.github.btj.termios-$GITHUB_REF_NAME-docs.zip . && popd
+        gh release upload $GITHUB_REF_NAME io.github.btj.termios-$GITHUB_REF_NAME-docs.zip --clobber --repo btj/termios
