@@ -44,10 +44,21 @@ _build/test/classes/TerminalRawInputTest.class: termios src/test/java/TerminalRa
 termios: _build/main/classes/io/github/btj/termios/Terminal.class _build/main/classes/${LIBNAME}
 
 _build/main/classes/${LIBNAME}: _build/main/io_github_btj_termios_Terminal.o
-	gcc ${SHARED_FLAG} -o _build/main/classes/${LIBNAME} _build/main/io_github_btj_termios_Terminal.o ${LINKFLAGS}
+ifeq ($(JNI_INCLUDE_DIR), darwin)
+	  gcc -target x86_64-apple-macos12 ${SHARED_FLAG} -o _build/main/libio_github_btj_termios-x86_64.dylib _build/main/io_github_btj_termios_Terminal.o ${LINKFLAGS}
+	  gcc -target arm64-apple-macos12 ${SHARED_FLAG} -o _build/main/libio_github_btj_termios-arm64.dylib _build/main/io_github_btj_termios_Terminal-arm64.o ${LINKFLAGS}
+	  lipo -create -output _build/main/classes/${LIBNAME} _build/main/libio_github_btj_termios-x86_64.dylib _build/main/libio_github_btj_termios-arm64.dylib
+else
+	  gcc ${SHARED_FLAG} -o _build/main/classes/${LIBNAME} _build/main/io_github_btj_termios_Terminal.o ${LINKFLAGS}
+endif
 
 _build/main/io_github_btj_termios_Terminal.o: _build/main/include/io_github_btj_termios_Terminal.h src/main/c/io_github_btj_termios_Terminal.c
-	gcc -c $(CFLAGS) -I _build/main/include "-I${JAVA_HOME}/include" "-I${JAVA_HOME}/include/${JNI_INCLUDE_DIR}" src/main/c/io_github_btj_termios_Terminal.c -o _build/main/io_github_btj_termios_Terminal.o
+ifeq ($(JNI_INCLUDE_DIR), darwin)
+	  gcc -target x86_64-apple-macos12 -c $(CFLAGS) -I _build/main/include "-I${JAVA_HOME}/include" "-I${JAVA_HOME}/include/${JNI_INCLUDE_DIR}" src/main/c/io_github_btj_termios_Terminal.c -o _build/main/io_github_btj_termios_Terminal.o
+	  gcc -target arm64-apple-macos12 -c $(CFLAGS) -I _build/main/include "-I${JAVA_HOME}/include" "-I${JAVA_HOME}/include/${JNI_INCLUDE_DIR}" src/main/c/io_github_btj_termios_Terminal.c -o _build/main/io_github_btj_termios_Terminal-arm64.o
+else
+	  gcc -c $(CFLAGS) -I _build/main/include "-I${JAVA_HOME}/include" "-I${JAVA_HOME}/include/${JNI_INCLUDE_DIR}" src/main/c/io_github_btj_termios_Terminal.c -o _build/main/io_github_btj_termios_Terminal.o
+endif
 
 _build/main/classes/io/github/btj/termios/Terminal.class _build/main/include/io_github_btj_termios_Terminal.h: src/main/java/io/github/btj/termios/Terminal.java
 	javac -h _build/main/include -d _build/main/classes src/main/java/io/github/btj/termios/Terminal.java
