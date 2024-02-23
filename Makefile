@@ -27,7 +27,12 @@ else
   PATHSEP=:
 endif
 
-jar: tests _build/main/io.github.btj.termios.jar
+dir = ./_build/main/classes
+
+jar: $(dir) tests _build/main/io.github.btj.termios.jar
+
+$(dir):
+	mkdir -p $@
 
 _build/main/io.github.btj.termios.jar: termios
 	jar cf _build/main/io.github.btj.termios.jar -C _build/main/classes .
