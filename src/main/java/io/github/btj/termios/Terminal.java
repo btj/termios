@@ -74,7 +74,7 @@ public class Terminal {
      *
      * @throws IllegalArgumentException if the given row or column are less than 1.
      */
-    public static void moveCursor(int row, int column, String text) {
+    public static void moveCursor(int row, int column) {
         if (row < 1)
             throw new IllegalArgumentException("The given row is less than 1");
         if (column < 1)
