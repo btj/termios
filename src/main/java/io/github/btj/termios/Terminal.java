@@ -1,8 +1,99 @@
 package io.github.btj.termios;
 
+import java.util.concurrent.TimeoutException;
+
+class IntBufferPoison extends Exception {
+    IntBufferPoison(Throwable throwable) {
+        super(throwable);
+    }
+}
+
+class IntBuffer {
+    private static final int SIZE_BITS = 10;
+    private static final int SIZE = 1 << SIZE_BITS;
+    private static final int SIZE_MASK = SIZE - 1;
+
+    private final int[] buffer = new int[SIZE];
+    private int start;
+    private int length;
+    private Throwable poison;
+
+    public synchronized void put(int element) throws InterruptedException {
+        while (length == SIZE)
+            wait();
+        buffer[(start + length++) & SIZE_MASK] = element;
+        notifyAll();
+    }
+
+    public synchronized void poison(Throwable poison) {
+        this.poison = poison;
+        notifyAll();
+    }
+
+    public synchronized int take(long deadline) throws InterruptedException, IntBufferPoison, TimeoutException {
+        while (length == 0) {
+            if (poison != null)
+                throw new IntBufferPoison(poison);
+            long currentTime = System.currentTimeMillis();
+            if (deadline <= currentTime)
+                throw new TimeoutException();
+            wait(deadline - currentTime);
+        }
+        int result = buffer[start++];
+        start &= SIZE_MASK;
+        length--;
+        notifyAll();
+        return result;
+    }
+}
+
+class Stdin {
+
+    private static final IntBuffer buffer = new IntBuffer();
+
+    static {
+        Thread t = new Thread(null, null, "io.github.btj.termios.Stdin pump") {
+            java.io.FileInputStream stdin = new java.io.FileInputStream(java.io.FileDescriptor.in);
+            public void run() {
+                try {
+                    for (;;) {
+                        int b = stdin.read();
+                        buffer.put(b);
+                    }
+                } catch (InterruptedException e) {
+                    throw new AssertionError(e);
+                } catch (java.io.IOException e) {
+                    buffer.poison(e);
+                }
+            }
+        };
+        t.setDaemon(true);
+        t.start();
+    }
+
+    static int readByte(long deadline) throws java.io.IOException, java.util.concurrent.TimeoutException {
+        try {
+            return buffer.take(deadline);
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        } catch (IntBufferPoison poison) {
+            if (poison.getCause() instanceof java.io.IOException e)
+                throw e;
+            throw new AssertionError("Unexpected poison", poison);
+        }
+    }
+
+    static int readByte() throws java.io.IOException {
+        try {
+            return readByte(Long.MAX_VALUE);
+        } catch (TimeoutException e) {
+            throw new AssertionError();
+        }
+    }
+
+}
+
 public class Terminal {
-    
-    private static java.io.FileInputStream stdin;
     
     static {
         try {
@@ -20,7 +111,6 @@ public class Terminal {
             throw new RuntimeException(e);
         }
 
-        stdin = new java.io.FileInputStream(java.io.FileDescriptor.in);
     }
 
     /**
@@ -29,7 +119,7 @@ public class Terminal {
      * until Return is pressed or otherwise processing them.
      */
     public static native void enterRawInputMode();
-    
+
     /**
      * Read a byte from standard input.
      *
@@ -40,7 +130,23 @@ public class Terminal {
      * by which keypresses.
      */
     public static int readByte() throws java.io.IOException {
-        return stdin.read();
+        return Stdin.readByte();
+    }
+    
+    /**
+     * Read a byte from standard input.
+     *
+     * This may be an ASCII character, (a part of) a
+     * (presumably UTF-8-encoded) non-ASCII character,
+     * or (part of) a control sequence. Run the raw input test
+     * to experimentally determine which bytes are generated
+     * by which keypresses.
+     * 
+     * Throws a TimeoutException if the specified deadline (in milliseconds since midnight, January 1, 1970 UTC)
+     * passed without a byte becoming available.
+     */
+    public static int readByte(long deadline) throws java.io.IOException, java.util.concurrent.TimeoutException {
+        return Stdin.readByte(deadline);
     }
 
     /**
