@@ -4,24 +4,38 @@
 #ifdef _WIN32
     #include <windows.h>
 
-    DWORD oldConsoleMode;
+    DWORD oldStdinConsoleMode;
     HANDLE hStdin;
+    DWORD oldStdoutConsoleMode;
+    HANDLE hStdout;
 
     JNIEXPORT void JNICALL Java_io_github_btj_termios_Terminal_enterRawInputMode(JNIEnv *env, jclass class_) {
         hStdin = GetStdHandle(STD_INPUT_HANDLE);
         if (hStdin == INVALID_HANDLE_VALUE)
             (*env)->FatalError(env, "Couldn't get the stdin handle");
 
-        if (!GetConsoleMode(hStdin, &oldConsoleMode) )
-            (*env)->FatalError(env, "Couldn't get the console mode. Is stdin not a console?");
+        if (!GetConsoleMode(hStdin, &oldStdinConsoleMode) )
+            (*env)->FatalError(env, "Couldn't get the stdin console mode. Is stdin not a console?");
 
         if (!SetConsoleMode(hStdin, ENABLE_VIRTUAL_TERMINAL_INPUT))
-            (*env)->FatalError(env, "Couldn't set the console mode. Is stdin not a console?");
+            (*env)->FatalError(env, "Couldn't set the stdin console mode. Is stdin not a console?");
+
+        hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hStdout == INVALID_HANDLE_VALUE)
+            (*env)->FatalError(env, "Couldn't get the stdout handle");
+        
+        if (!GetConsoleMode(hStdout, &oldStdoutConsoleMode))
+            (*env)->FatalError(env, "Couldn't get the stdout console mode. Is stdout not a console?");
+        
+        if (!SetConsoleMode(hStdout, ENABLE_PROCESSED_OUTPUT|ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+            (*env)->FatalError(env, "Couldn't set the stdout console mode. Is stdout not a console?");
     }
 
     JNIEXPORT void JNICALL Java_io_github_btj_termios_Terminal_leaveRawInputMode(JNIEnv *env, jclass class_) {
-        if (!SetConsoleMode(hStdin, oldConsoleMode))
-            (*env)->FatalError(env, "Couldn't set the console mode. Is stdin not a console?");
+        if (!SetConsoleMode(hStdin, oldStdinConsoleMode))
+            (*env)->FatalError(env, "Couldn't restore the stdin console mode. Is stdin not a console?");
+        if (!SetConsoleMode(hStdout, oldStdoutConsoleMode))
+            (*env)->FatalError(env, "Couldn't restore the stdout console mode. Is stdout not a console?");
     }
 
 #else
