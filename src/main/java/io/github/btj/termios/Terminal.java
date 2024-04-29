@@ -18,6 +18,8 @@ class IntBuffer {
     private int length;
     private Throwable poison;
 
+    public synchronized int length() { return length; }
+
     public synchronized void put(int element) throws InterruptedException {
         while (length == SIZE)
             wait();
@@ -50,6 +52,27 @@ class IntBuffer {
 class Stdin {
 
     private static final IntBuffer buffer = new IntBuffer();
+    private static Runnable listener;
+
+    static void addListener(Runnable listener) {
+        boolean callNow = false;
+        synchronized (Stdin.class) {
+            if (Stdin.listener != null)
+                throw new IllegalStateException("A standard input listener was already registered");
+            if (buffer.length() > 0)
+                callNow = true;
+            else
+                Stdin.listener = listener;
+        }
+        if (callNow)
+            listener.run();
+    }
+
+    static synchronized Runnable removeListener() {
+        Runnable result = listener;
+        listener = null;
+        return result;
+    }
 
     static {
         Thread t = new Thread(null, null, "io.github.btj.termios.Stdin pump") {
@@ -59,6 +82,9 @@ class Stdin {
                     for (;;) {
                         int b = stdin.read();
                         buffer.put(b);
+                        Runnable listener = removeListener();
+                        if (listener != null)
+                            listener.run();
                     }
                 } catch (InterruptedException e) {
                     throw new AssertionError(e);
@@ -119,6 +145,35 @@ public class Terminal {
      * until Return is pressed or otherwise processing them.
      */
     public static native void enterRawInputMode();
+
+    /**
+     * If a byte is available on standard input now, this method
+     * calls the given Runnable now, in the current thread.
+     * Otherwise, this method sets the given Runnable as the input
+     * listener. It is called once in the standard input pump thread
+     * when a byte becomes available on standard input.
+     * To be notified again, add the listener again
+     * after reading the byte.
+     * 
+     * Note: the standard input pump thread is different from the AWT
+     * event handling thread. If you are creating a Swing application,
+     * you must run your code in the AWT event handling thread as follows:
+     * <pre>
+     * Terminal.setInputListener(() -> java.awt.EventQueue.invokeLater(() -> myCode()));
+     * </pre>
+     */
+    public static void setInputListener(Runnable listener) {
+        Stdin.addListener(listener);
+    }
+
+    /**
+     * Removes the input listener, if any. Note: this does not guarantee
+     * that the listener will not be called anymore,
+     * so your listener must be able to deal with that.
+     */
+    public static void clearInputListener() {
+        Stdin.removeListener();
+    }
 
     /**
      * Read a byte from standard input.

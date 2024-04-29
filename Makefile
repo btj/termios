@@ -42,6 +42,9 @@ tests: _build/test/classes/TerminalRawInputTest.class _build/test/classes/Termin
 _build/test/classes/TerminalTest.class: termios src/test/java/TerminalTest.java
 	javac -d _build/test/classes -cp _build/main/classes src/test/java/TerminalTest.java
 
+_build/test/classes/AwtThreadTerminalTest.class: termios src/test/java/AwtThreadTerminalTest.java
+	javac -d _build/test/classes -cp _build/main/classes src/test/java/AwtThreadTerminalTest.java
+
 _build/test/classes/TerminalRawInputTest.class: termios src/test/java/TerminalRawInputTest.java
 	javac -d _build/test/classes -cp _build/main/classes src/test/java/TerminalRawInputTest.java
 
@@ -73,6 +76,9 @@ test_raw_input: _build/test/classes/TerminalRawInputTest.class
 
 test: _build/test/classes/TerminalTest.class
 	java -cp "_build/main/classes${PATHSEP}_build/test/classes" TerminalTest
+
+test_awt_thread: _build/test/classes/AwtThreadTerminalTest.class
+	java -cp "_build/main/classes${PATHSEP}_build/test/classes" AwtThreadTerminalTest
 
 javadoc: _build/docs/index.html
 
