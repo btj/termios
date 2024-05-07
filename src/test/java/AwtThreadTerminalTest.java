@@ -1,3 +1,4 @@
+import javax.swing.JFrame;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
@@ -122,6 +123,11 @@ public class AwtThreadTerminalTest {
         parser.expect(';');
         int width = parser.expectNumber();
         parser.expect('t');
+        
+        // Create a dummy JFrame. Serves only to keep the AWT event handling thread alive.
+        // See https://docs.oracle.com/en%2Fjava%2Fjavase%2F21%2Fdocs%2Fapi%2F%2F/java.desktop/java/awt/doc-files/AWTThreadIssues.html#auto-shutdown-heading
+        JFrame dummyFrame = new JFrame();
+        dummyFrame.pack();
         
         class TestApp {
             int ballRow = height / 2 - 1;
